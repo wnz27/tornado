@@ -1,8 +1,8 @@
 What's new in Tornado 6.1.0
 ===========================
 
-Oct X, 2020
------------
+Oct 30, 2020
+------------
 
 Deprecation notice
 ~~~~~~~~~~~~~~~~~~
@@ -20,6 +20,12 @@ General changes
   improve performance. This does not change the fact that Tornado is significantly
   less scalable on Windows than on other platforms. 
 - Binary wheels are now provided for Windows, MacOS, and Linux (amd64 and arm64).
+
+`tornado.gen`
+~~~~~~~~~~~~~
+
+- `.coroutine` now has better support for the Python 3.7+ ``contextvars`` module. 
+  In particular, the ``ContextVar.reset`` method is now supported.
 
 `tornado.http1connection`
 ~~~~~~~~~~~~~~~~~~~~~~~~~

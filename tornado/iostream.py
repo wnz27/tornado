@@ -111,8 +111,7 @@ class UnsatisfiableReadError(Exception):
 
 
 class StreamBufferFullError(Exception):
-    """Exception raised by `IOStream` methods when the buffer is full.
-    """
+    """Exception raised by `IOStream` methods when the buffer is full."""
 
 
 class _StreamBuffer(object):
@@ -530,6 +529,9 @@ class BaseIOStream(object):
         """
         self._check_closed()
         if data:
+            if isinstance(data, memoryview):
+                # Make sure that ``len(data) == data.nbytes``
+                data = memoryview(data).cast("B")
             if (
                 self.max_write_buffer_size is not None
                 and len(self._write_buffer) + len(data) > self.max_write_buffer_size
@@ -1588,6 +1590,11 @@ class SSLIOStream(IOStream):
                 # to read (attempting to read may or may not raise an exception
                 # depending on the SSL version)
                 return None
+            # clip buffer size at 1GB since SSL sockets only support upto 2GB
+            # this change in behaviour is transparent, since the function is
+            # already expected to (possibly) read less than the provided buffer
+            if len(buf) >> 30:
+                buf = memoryview(buf)[: 1 << 30]
             try:
                 return self.socket.recv_into(buf, len(buf))
             except ssl.SSLError as e:
@@ -1622,6 +1629,13 @@ class PipeIOStream(BaseIOStream):
     def __init__(self, fd: int, *args: Any, **kwargs: Any) -> None:
         self.fd = fd
         self._fio = io.FileIO(self.fd, "r+")
+        if sys.platform == "win32":
+            # The form and placement of this assertion is important to mypy.
+            # A plain assert statement isn't recognized here. If the assertion
+            # were earlier it would worry that the attributes of self aren't
+            # set on windows. If it were missing it would complain about
+            # the absence of the set_blocking function.
+            raise AssertionError("PipeIOStream is not supported on Windows")
         os.set_blocking(fd, False)
         super().__init__(*args, **kwargs)
 

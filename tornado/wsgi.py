@@ -73,7 +73,7 @@ class WSGIContainer(object):
             status = "200 OK"
             response_headers = [("Content-type", "text/plain")]
             start_response(status, response_headers)
-            return ["Hello world!\n"]
+            return [b"Hello world!\n"]
 
         container = tornado.wsgi.WSGIContainer(simple_app)
         http_server = tornado.httpserver.HTTPServer(container)
@@ -146,8 +146,7 @@ class WSGIContainer(object):
 
     @staticmethod
     def environ(request: httputil.HTTPServerRequest) -> Dict[Text, Any]:
-        """Converts a `tornado.httputil.HTTPServerRequest` to a WSGI environment.
-        """
+        """Converts a `tornado.httputil.HTTPServerRequest` to a WSGI environment."""
         hostport = request.host.split(":")
         if len(hostport) == 2:
             host = hostport[0]
